@@ -1,77 +1,52 @@
 pipeline {
     agent any
-    
-    tools {
-        maven "Maven3"
+
+    environment {
+        DOCKER_IMAGE = "ashokraji/tomcat"
+        DOCKER_TAG = "9.0"
     }
+
     stages {
-        stage('Clean workspace') {
+        stage('Checkout') {
             steps {
-                cleanWs()
+                git branch: 'main', url: 'https://github.com/Ashokraji5/java-maven-app.git'
             }
         }
-        stage('Git clone') {
+
+        stage('Build') {
             steps {
-                git branch: 'main', url: 'https://github.com/Aseemakram19/java-maven-app.git'
+                echo 'Building with Maven...'
+                sh 'mvn clean package'
             }
         }
-        stage('maven war file build') {
+
+        stage('Build Docker Image') {
             steps {
-               sh 'mvn clean package'
+                echo 'Building Docker image...'
+                sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
             }
         }
-        stage('Docker images/conatiner remove') {
+
+        stage('Push Docker Image') {
             steps {
-                script{
-                        sh '''docker stop javamavenapp_container
-                        docker rm javamavenapp_container
-                        docker rmi javamavenapp aseemakram19/javamavenapp:latest'''
-                }  
-            }
-        }
-        stage('Docker images - Push to dockerhub') {
-            steps {
-                script{
-                    withDockerRegistry(credentialsId: 'docker', toolname: 'docker'){
-                
-                        sh '''docker build -t javamavenapp .
-                        docker tag javamavenapp aseemakram19/javamavenapp:latest
-                        docker push  aseemakram19/javamavenapp:latest'''
-                      } 
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-credentials',
+                    usernameVariable: 'DOCKERHUB_USER',
+                    passwordVariable: 'DOCKERHUB_PASS'
+                )]) {
+                    sh 'echo $DOCKERHUB_PASS | docker login -u $DOCKERHUB_USER --password-stdin'
+                    sh "docker push ${DOCKER_IMAGE}:${DOCKER_TAG}"
                 }
             }
         }
-        stage('docker container of app') {
-            steps {
-               sh 'docker run -d -p 9000:8080 --name javamavenapp_container -t aseemakram19/javamavenapp:latest'
-            }
-        }
-        
     }
-    post {
-    always {
-        script {
-            def buildStatus = currentBuild.currentResult
-            def buildUser = currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause')[0]?.userId ?: 'Github User'
-            
-            emailext (
-                subject: "Pipeline ${buildStatus}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                body: """
-                    <p>This is a Jenkins maven CICD pipeline status.</p>
-                    <p>Project: ${env.JOB_NAME}</p>
-                    <p>Build Number: ${env.BUILD_NUMBER}</p>
-                    <p>Build Status: ${buildStatus}</p>
-                    <p>Started by: ${buildUser}</p>
-                    <p>Build URL: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
-                """,
-                to: 'mohdaseemakram19@gmail.com',
-                from: 'mohdaseemakram19@gmail.com',
-                replyTo: 'mohdaseemakram19@gmail.com',
-                mimeType: 'text/html',
-                attachmentsPattern: 'trivyfs.txt,trivyimage.txt'
-            )
-           }
-       }
 
+    post {
+        success {
+            echo 'Pipeline succeeded 🎉'
+        }
+        failure {
+            echo 'Pipeline failed ❌'
+        }
     }
 }
