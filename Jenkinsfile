@@ -7,7 +7,7 @@ pipeline {
     }
 
     tools {
-        maven 'maven 3.9.11'  // Specify the Maven version here
+        maven 'maven'  // This matches the name you configured in Global Tool Configuration
     }
 
     stages {
