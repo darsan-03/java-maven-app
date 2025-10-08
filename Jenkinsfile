@@ -2,8 +2,12 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "ashokraji/tomcat"
+        DOCKER_IMAGE = "ashokraji/tomcat:9.0"
         DOCKER_TAG = "9.0"
+    }
+
+    tools {
+        maven 'Maven 3.9.11'  // Specify the Maven version here
     }
 
     stages {
@@ -29,11 +33,7 @@ pipeline {
 
         stage('Push Docker Image') {
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-credentials',
-                    usernameVariable: 'DOCKERHUB_USER',
-                    passwordVariable: 'DOCKERHUB_PASS'
-                )]) {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKERHUB_USER', passwordVariable: 'DOCKERHUB_PASS')]) {
                     sh 'echo $DOCKERHUB_PASS | docker login -u $DOCKERHUB_USER --password-stdin'
                     sh "docker push ${DOCKER_IMAGE}:${DOCKER_TAG}"
                 }
