@@ -2,9 +2,9 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "ashokraji/tomcat"  // Correctly closed the quotes
-        DOCKER_TAG = "9.0"
-    }  // Added the closing brace here for the environment block
+        DOCKER_IMAGE = "ashokraji/tomcat"
+        DOCKER_TAG = "9.0-${GIT_COMMIT}"  // Tag with the Git commit hash
+    }
 
     tools {
         maven 'maven'  // This matches the name you configured in Global Tool Configuration
