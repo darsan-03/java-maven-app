@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "ashokraji/tomcat:9.0"
+        DOCKER_IMAGE = "ashokraji/tomcat
         DOCKER_TAG = "9.0"
     }
 
