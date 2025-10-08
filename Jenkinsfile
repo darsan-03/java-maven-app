@@ -2,8 +2,9 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "ashokraji/tomcat
-        DOCKER_TAG = "9.0"
+    DOCKER_IMAGE = "ashokraji/tomcat"  // Correctly closed the quotes
+    DOCKER_TAG = "9.0"
+}
     }
 
     tools {
