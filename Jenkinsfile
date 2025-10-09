@@ -27,18 +27,19 @@ pipeline {
         }
 
         stage('SonarQube Analysis') {
-            steps {
-                script {
-                    echo 'Running SonarQube analysis...'
-                    sh """
-                        mvn sonar:sonar \
-                        -Dsonar.projectKey=my-project-key \  // <-- Problem here
-                        -Dsonar.host.url=${SONARQUBE_URL} \
-                        -Dsonar.login=${SONARQUBE_TOKEN}
-                    """
-                }
-            }
+    steps {
+        script {
+            echo 'Running SonarQube analysis...'
+            sh """
+                mvn sonar:sonar \
+                -Dsonar.projectKey=my-project-key \
+                -Dsonar.host.url=${SONARQUBE_URL} \
+                -Dsonar.login=${SONARQUBE_TOKEN}
+            """
         }
+    }
+}
+
 
         stage('Build Docker Image') {
             steps {
