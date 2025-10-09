@@ -3,11 +3,13 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = "ashokraji/tomcat"
-        DOCKER_TAG = "9.0-${GIT_COMMIT}"  // Tag with the Git commit hash
+        DOCKER_TAG = "9.0-${BUILD_NUMBER}"  // dynamic tag — good
+        SONARQUBE_URL = 'http://13.221.128.189:9000'  // SonarQube URL — good
+        SONARQUBE_TOKEN = credentials('sonarqube-token')  // good use of credentials binding
     }
 
     tools {
-        maven 'maven'  // This matches the name you configured in Global Tool Configuration
+        maven 'maven'  // make sure this matches your Jenkins global tool name exactly
     }
 
     stages {
@@ -21,6 +23,20 @@ pipeline {
             steps {
                 echo 'Building with Maven...'
                 sh 'mvn clean package'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                script {
+                    echo 'Running SonarQube analysis...'
+                    sh """
+                        mvn sonar:sonar \
+                        -Dsonar.projectKey=my-project-key \  // <-- Problem here
+                        -Dsonar.host.url=${SONARQUBE_URL} \
+                        -Dsonar.login=${SONARQUBE_TOKEN}
+                    """
+                }
             }
         }
 
