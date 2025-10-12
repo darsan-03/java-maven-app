@@ -4,7 +4,7 @@ pipeline {
     environment {
         DOCKER_IMAGE = "ashokraji/tomcat"
         DOCKER_TAG = "9.0-${BUILD_NUMBER}"
-        SONARQUBE_URL = 'http://34.207.207.43:9000'  // updated SonarQube IP
+        SONARQUBE_URL = 'http://34.207.207.43:9000'
         SONARQUBE_TOKEN = credentials('sonarqube-token')
     }
 
@@ -35,3 +35,18 @@ pipeline {
                         -Dsonar.login=${SONARQUBE_TOKEN}
                     """
                 }
+            }
+        }
+
+        // You can add more stages here, like Docker build/push
+    }
+
+    post {
+        success {
+            echo 'Pipeline succeeded 🎉'
+        }
+        failure {
+            echo 'Pipeline failed ❌'
+        }
+    }
+}
