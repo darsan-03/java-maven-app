@@ -4,12 +4,12 @@ pipeline {
     environment {
         DOCKER_IMAGE = "ashokraji/tomcat"
         DOCKER_TAG = "9.0-${BUILD_NUMBER}"
-        SONARQUBE_URL = 'http://34.207.207.43:9000'
-        SONARQUBE_TOKEN = credentials('sonarqube-token')
+        SONARQUBE_URL = 'http://52.90.161.136:9000'         // ✅ Updated SonarQube IP
+        SONARQUBE_TOKEN = credentials('sonarqube-token')    // 🔐 Jenkins secret text
     }
 
     tools {
-        maven 'maven'
+        maven 'maven'  // Make sure 'maven' is defined under Jenkins tools
     }
 
     stages {
@@ -18,7 +18,7 @@ pipeline {
             steps {
                 git branch: 'main',
                     url: 'https://github.com/Ashokraji5/java-maven-app.git',
-                    credentialsId: 'github-credentials'
+                    credentialsId: 'github-credentials'    // 🔐 GitHub credentials in Jenkins
             }
         }
 
@@ -53,24 +53,3 @@ pipeline {
                 echo "📤 Pushing Docker image to DockerHub..."
                 withCredentials([usernamePassword(
                     credentialsId: 'dockerhub-credentials',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
-                    sh """
-                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                        docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
-                    """
-                }
-            }
-        }
-    }
-
-    post {
-        success {
-            echo '✅ Pipeline succeeded — Image pushed to DockerHub!'
-        }
-        failure {
-            echo '❌ Pipeline failed — Check the logs!'
-        }
-    }
-}
