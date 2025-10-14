@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'master' }  // Run on the master node only
+    agent any  // Run on the master node only
 
     environment {
         DOCKER_IMAGE = "ashokraji/tomcat"
@@ -14,16 +14,18 @@ pipeline {
         stage('Checkout Code') {
             steps {
                 echo "🔄 Cloning the repository..."
+                // Switch to SSH URL to avoid HTTPS prompts
                 git branch: 'main',
-                    url: 'https://github.com/Ashokraji5/java-maven-app.git',
-                    credentialsId: 'github-credentials'
+                    url: 'git@github.com:Ashokraji5/java-maven-app.git',  // SSH URL
+                    credentialsId: 'github-credentials'  // Make sure this matches the SSH key credential in Jenkins
             }
         }
 
         stage('Build with Maven') {
             steps {
                 echo "🔧 Building the project with Maven..."
-                sh 'mvn clean package -e -X'  // This will compile, test, and package
+                // Maven build command (you can add -DskipTests if you want to skip tests)
+                sh 'mvn clean package -DskipTests'
             }
         }
 
@@ -43,7 +45,7 @@ pipeline {
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
                     sh """
-                        echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin
+                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
                         docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
                     """
                 }
@@ -60,3 +62,4 @@ pipeline {
         }
     }
 }
+
