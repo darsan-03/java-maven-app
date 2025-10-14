@@ -1,21 +1,19 @@
 pipeline {
-    agent { label 'maven' }
+    agent { label 'master' }  // Run on the master node only
 
     environment {
         DOCKER_IMAGE = "ashokraji/tomcat"
         DOCKER_TAG = "9.0-${BUILD_NUMBER}"
-        SONARQUBE_URL = 'http://52.90.161.136:9000'
-        SONARQUBE_TOKEN = credentials('sonarqube-token')
     }
 
     tools {
-        maven 'maven'
+        maven 'maven'  // Assuming Maven is already configured in Jenkins
     }
 
     stages {
-
         stage('Checkout Code') {
             steps {
+                echo "🔄 Cloning the repository..."
                 git branch: 'main',
                     url: 'https://github.com/Ashokraji5/java-maven-app.git',
                     credentialsId: 'github-credentials'
@@ -25,19 +23,7 @@ pipeline {
         stage('Build with Maven') {
             steps {
                 echo "🔧 Building the project with Maven..."
-                sh 'mvn clean package -DskipTests -e -X'
-            }
-        }
-
-        stage('SonarQube Analysis') {
-            steps {
-                echo "🔍 Running SonarQube analysis..."
-                sh """
-                    mvn sonar:sonar \
-                    -Dsonar.projectKey=my-project-key \
-                    -Dsonar.host.url=${SONARQUBE_URL} \
-                    -Dsonar.login=${SONARQUBE_TOKEN}
-                """
+                sh 'mvn clean package -e -X'  // This will compile, test, and package
             }
         }
 
@@ -57,7 +43,7 @@ pipeline {
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
                     sh """
-                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                        echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin
                         docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
                     """
                 }
