@@ -1,5 +1,5 @@
 pipeline {
-    agent any  // Run on the master node only
+    agent any  // Run on any available agent (can be restricted to master if you prefer)
 
     environment {
         DOCKER_IMAGE = "ashokraji/tomcat"
@@ -13,19 +13,16 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
-                echo "🔄 Cloning the repository..."
-                // Switch to SSH URL to avoid HTTPS prompts
-                git branch: 'main',
-                    url: 'git@github.com:Ashokraji5/java-maven-app.git',  // SSH URL
-                    credentialsId: 'github-credentials'  // Make sure this matches the SSH key credential in Jenkins
+                echo "🔄 Cloning the repository from GitHub..."
+                // Using the SSH URL with the credentialsId for SSH key authentication
+                git url: 'git@github.com:Ashokraji5/java-maven-app.git', branch: 'main', credentialsId: 'github-ssh-credentials'
             }
         }
 
         stage('Build with Maven') {
             steps {
                 echo "🔧 Building the project with Maven..."
-                // Maven build command (you can add -DskipTests if you want to skip tests)
-                sh 'mvn clean package -DskipTests'
+                sh 'mvn clean package -DskipTests -e -X'
             }
         }
 
@@ -62,4 +59,3 @@ pipeline {
         }
     }
 }
-
