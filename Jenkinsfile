@@ -1,21 +1,25 @@
 pipeline {
-    agent any  // Run on any available agent (can be restricted to master if you prefer)
+    agent any
 
     environment {
-        DOCKER_IMAGE = "ashokraji/tomcat"
-        DOCKER_TAG = "9.0-${BUILD_NUMBER}"
+        // Use Tomcat image for building and running your app
+        DOCKER_IMAGE = "darsan03/tomcat"  // Change this if you want to use a custom Tomcat image
+        DOCKER_TAG = "9.0-${BUILD_NUMBER}"  // Ensure it uses the correct Tomcat version
+        SONARQUBE_URL = 'http://34.236.145.115:9000'
+        SONARQUBE_TOKEN = credentials('sonarqube-token')
     }
 
     tools {
-        maven 'maven'  // Assuming Maven is already configured in Jenkins
+        maven 'maven'
     }
 
     stages {
+
         stage('Checkout Code') {
             steps {
-                echo "🔄 Cloning the repository from GitHub..."
-                // Using the SSH URL with the credentialsId for SSH key authentication
-                git url: 'git@github.com:Ashokraji5/java-maven-app.git', branch: 'main', credentialsId: 'github-ssh-credentials'
+                git branch: 'main',
+                    url: 'https://github.com/darsan-03/java-maven-app.git',
+                    credentialsId: 'github-credentials'
             }
         }
 
@@ -26,10 +30,24 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+        stage('SonarQube Analysis') {
             steps {
-                echo "🐳 Building Docker image..."
-                sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
+                echo "🔍 Running SonarQube analysis..."
+                sh """
+                    mvn sonar:sonar \
+                    -Dsonar.projectKey=my-project-key \
+                    -Dsonar.host.url=${SONARQUBE_URL} \
+                    -Dsonar.login=${SONARQUBE_TOKEN}
+                """
+            }
+        }
+
+        stage('Build Docker Image with Tomcat') {
+            steps {
+                echo "🐳 Building Docker image for Tomcat with your app..."
+                sh """
+                    docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} -f Dockerfile .
+                """
             }
         }
 
